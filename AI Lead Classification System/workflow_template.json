@@ -1,0 +1,362 @@
+{
+  "name": "AI Lead Classification System",
+  "nodes": [
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.message }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "systemMessage": "=Ти асистент який класифікує повідомлення клієнтів. Визнач категорію повідомлення і відповідай ТІЛЬКИ валідним JSON обʼєктом без пояснень.\n\nУМОВИ:\nЦІНА - якщо питають про вартість або ціни\nПІДТРИМКА - якщо є технічна проблема\nІНФО - якщо просять загальну інформацію\nІНШЕ - якщо не підходить жодна категорія\n\n{\"category\": \"ЦІНА\"}\n\nабо\n\n{\"category\": \"ПІДТРИМКА\"}\n\nабо\n\n{\"category\": \"ІНФО\"}\n\nабо\n\n{\"category\": \"ІНШЕ\"}",
+          "maxOutputTokens": 200
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        64,
+        -96
+      ],
+      "id": "b26b8551-860c-451a-a8a1-291130983788",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "AtmijHbTrumfGaSJ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gemini",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -304,
+        -96
+      ],
+      "id": "a67a182a-fed6-4eb0-b6fe-ea2aa98154ac",
+      "name": "Webhook",
+      "webhookId": "8fc96050-ea56-4de0-b834-86662a614066"
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $json.body.source;\n\nconst priority = source === 'facebook' || source === 'instagram'\n? \"Високий\"\n: source === 'website'\n? \"Середній\"\n: \"Низький\";\n\nconst priority_telegram = source === \"facebook\" || source === \"instagram\"\n? \"🔥 Високий\"\n: source === 'website'\n? \"⚡ Середній\"\n: \"📩 Низький\";\n\nreturn {\n  name: $json.body.name,\n  email: $json.body.email,\n  phone: $json.body.phone,\n  source: $json.body.source,\n  message: $json.body.message,\n  priority: priority,\n  priotiryTelegram: priority_telegram,\n  timestamp: new Date().toISOString(),\n  timestampTelegram: new Date().toLocaleString('uk-UA',{\n    day: '2-digit',\n    month: '2-digit',\n    year: 'numeric',\n    hour: '2-digit',\n    minute: '2-digit',\n    timeZone: 'Europe/Kyiv'\n  })\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -96,
+        -96
+      ],
+      "id": "f3e7c71c-fb06-4ea1-b990-a28f02a21dd0",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $json.content.parts[0].text;\n\nconst parsed = JSON.parse(text);\n\nconst category = parsed.category;\n\nreturn {\n  category: category\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        -192
+      ],
+      "id": "b64ba7bf-2e26-4c33-81fb-4479947d2eb9",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "url"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('Code in JavaScript').item.json.name }}",
+            "Email": "={{ $('Code in JavaScript').item.json.email }}",
+            "Phone": "={{ $('Code in JavaScript').item.json.phone }}",
+            "Source": "={{ $('Code in JavaScript').item.json.source }}",
+            "Priority": "={{ $('Code in JavaScript').item.json.priority }}",
+            "Message": "={{ $('Code in JavaScript').item.json.message }}",
+            "Timestamp": "={{ $('Code in JavaScript').item.json.timestamp }}",
+            "Category": "={{ $json.category }}",
+            "Error": "={{ $json.errorGEMINI }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Error",
+              "displayName": "Error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        560,
+        -96
+      ],
+      "id": "ff349d7d-f042-4155-97a5-11ba4179d12a",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "geRwTXXyIy0u97Qi",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  errorGEMINI: \"ERROR GEMINI NODE\",\n  category: \"Невідомо\"\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        16
+      ],
+      "id": "ab090d1b-5683-4b74-b0ac-04888aafd784",
+      "name": "ERROR GEMINI"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=🔔 Новий лід!\nПріорітет: {{ $('Code in JavaScript').item.json.priotiryTelegram }}\nІмʼя: {{ $('Code in JavaScript').item.json.name }}\nПошта: {{ $('Code in JavaScript').item.json.email }}\nТелефон: {{ $('Code in JavaScript').item.json.phone }}\nДжерело: {{ $('Code in JavaScript').item.json.source }}\nПовідомлення: {{ $('Code in JavaScript').item.json.message }}\nЧас: {{ $('Code in JavaScript').item.json.priotiryTelegram }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        -96
+      ],
+      "id": "93bacfb1-9918-47b7-aca7-94e552c680e1",
+      "name": "Send a text message",
+      "webhookId": "5fe4bdba-25e8-4081-bcc4-8002416002ae",
+      "credentials": {
+        "telegramApi": {
+          "id": "2xKQlts6dC72sgix",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "\n### English\n\"Built an AI-powered lead classification system using n8n, JavaScript, Google Gemini LLM, Google Sheets, and Telegram, which automatically categorizes incoming leads, reducing manual processing time and improving response speed for sales teams.\"\n\n### Ukraine\n«Створив систему класифікації потенційних клієнтів на основі штучного інтелекту, використовуючи n8n, JavaScript, Google Gemini LLM, Google Sheets і Telegram, яка автоматично класифікує потенційних клієнтів, скорочуючи час ручної обробки та покращуючи швидкість реагування для команд продажів».",
+        "height": 304,
+        "width": 576
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1072,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "6fdb1a9c-d0a9-4c68-b565-daa2b8b28bc3",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERROR GEMINI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERROR GEMINI": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "0fb33032-6d96-4b8f-85e1-d96a11e74345",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9b9d952f7e2fb9e90dccb723d84939c7681e462cc54b78901395caa971672e63"
+  },
+  "id": "Dp9tpJWy0AyJrqtt",
+  "tags": []
+}
