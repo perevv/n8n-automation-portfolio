@@ -162,9 +162,11 @@ Email: john@email.com
 
 ---
 
-Цей Workflow є зразковою версією.
+## Примітки щодо налаштування
+
+Цей Workflow є **зразковою версією**.
 
 Замініть такі значення:
 
-- YOUR_CHAT_ID
-- YOUR_SPREADSHEET_ID
+- `YOUR_CHAT_ID`
+- `YOUR_SPREADSHEET_ID`
