@@ -1,0 +1,424 @@
+{
+  "name": "Lead Capture & Notification System",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "Lead-Capture",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,  
+        0
+      ],
+      "id": "bb47efd4-0b34-4622-b79c-b1ee83638e97",
+      "name": "Webhook",
+      "webhookId": "709cd73b-f7ec-4c14-80f6-ab558af29c56"
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $json.body.source;\n\nconst priority = source === \"facebook\" || source === \"instagram\"\n? \"Високий\"\n: source === \"website\"\n? \"Середній\"\n: \"Низький\";\n\nconst priority_telegram = source === \"facebook\" || source === \"instagram\"\n? \"🔥 Високий\"\n: source === \"website\"\n? \"⚡ Середній\"\n: \"📩 Низький\";\n\nif (!$json.body.name || !$json.body.email) {\n  throw new Error(\"Відсутні обовʼязкові поля: name або email\");\n};\n\nreturn {\n  name: $json.body.name,\n  email: $json.body.email,\n  phone: $json.body.phone,\n  source: $json.body.source,\n  priority: priority,\n  priority_telegram: priority_telegram,\n  message: $json.body.message,\n  timestamp: new Date ().toISOString()\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "7e6f4c4a-2c43-43de-ac1f-8c1f24f7a38b",
+      "name": "Code in JavaScript",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "url"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('Code in JavaScript').item.json.name }}",
+            "Email": "={{ $('Code in JavaScript').item.json.email }}",
+            "Phone": "={{ $('Code in JavaScript').item.json.phone }}",
+            "Source": "={{ $('Code in JavaScript').item.json.source }}",
+            "Timestamp": "={{ $('Code in JavaScript').item.json.timestamp }}",
+            "Priority": "={{ $('Code in JavaScript').item.json.priority }}",
+            "Message": "={{ $('Code in JavaScript').item.json.message }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        400,
+        -32
+      ],
+      "id": "9442f9ff-5621-4249-9fb2-b3df4a6e81a9",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "geRwTXXyIy0u97Qi",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=🔔 Новий лід!\nІмʼя: {{ $('Code in JavaScript').item.json.name }}\nEmail: {{ $('Code in JavaScript').item.json.email }}\nТелефон: {{ $('Code in JavaScript').item.json.phone }}\nДжерело: {{ $('Code in JavaScript').item.json.source }}\nПріоритет: {{ $('Code in JavaScript').item.json.priority_telegram }}\nПовідомлення: {{ $('Code in JavaScript').item.json.message }}\nЧас: {{ new Date($('Code in JavaScript').item.json.timestamp).toLocaleString('uk-UA',{\n    day: '2-digit',\n    month: '2-digit',\n    year: 'numeric',\n    hour: '2-digit',\n    minute: '2-digit',\n    timeZone: 'Europe/Kyiv'\n  }) }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        640,
+        -16
+      ],
+      "id": "d97229fe-d8c0-48aa-991b-cc81618b9681",
+      "name": "Send a text message",
+      "webhookId": "2af3c07a-663c-4a52-ac1c-bab06d3b32d0",
+      "credentials": {
+        "telegramApi": {
+          "id": "2xKQlts6dC72sgix",
+          "name": "Telegram account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "url"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('Code in JavaScript').item.json.name }}",
+            "Email": "={{ $('Code in JavaScript').item.json.email }}",
+            "Phone": "={{ $('Code in JavaScript').item.json.phone }}",
+            "Source": "={{ $('Code in JavaScript').item.json.source }}",
+            "Priority": "={{ $('Code in JavaScript').item.json.priority }}",
+            "Message": "={{ $('Code in JavaScript').item.json.message }}",
+            "Timestamp": "={{ $('Code in JavaScript').item.json.timestamp }}",
+            "Error": "ERROR_TELEGRAM"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Error",
+              "displayName": "Error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        864,
+        96
+      ],
+      "id": "f28ca1e8-f0ab-4d4b-a24a-a09ea763d472",
+      "name": "ERROR TELEGRAM",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "geRwTXXyIy0u97Qi",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=⚠️ Помилка запису в Google Sheets!\nЛід: {{ $('Webhook').item.json.body.phone }}\nEmail: {{ $('Webhook').item.json.body.email }}\nЧас: {{ new Date().toLocaleString('uk-UA',{\n    day: '2-digit',\n    month: '2-digit',\n    year: 'numeric',\n    hour: '2-digit',\n    minute: '2-digit',\n    timeZone: 'Europe/Kyiv'\n  })\n}}\nПомилка: {{ $json.error }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        496,
+        192
+      ],
+      "id": "38014bf8-45a1-424b-8200-5382e3a6e251",
+      "name": "ERROR G Sheets",
+      "webhookId": "38714020-bf71-4689-94e9-2ad0e9879bf1",
+      "credentials": {
+        "telegramApi": {
+          "id": "2xKQlts6dC72sgix",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "\n### English\n\"Built an automated lead capture and notification system using n8n, Webhooks, Google Sheets, Telegram, and JavaScript prioritization logic, reducing the time from lead registration to manager response.\"\n\n### Ukraine\nСтворив автоматизовану систему збору та повідомлення про потенційних клієнтів за допомогою n8n, Webhooks, Google Sheets, Telegram та логіки пріоритетності JavaScript, скоротивши час від реєстрації потенційного клієнта до відповіді менеджера.",
+        "height": 240,
+        "width": 608,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1200,
+        -464
+      ],
+      "typeVersion": 1,
+      "id": "1307c938-a883-49e1-ad71-d18265895d3d",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Проєкт 1 — Lead Capture & Notification System\n1. Проблема\n\nЯ розробив workflow, який буде корисним для будь-якого бізнесу, що працює з трафіком та рекламою. Коли кількість лідів невелика, їх можна обробляти вручну без значних труднощів. Проте зі збільшенням потоку заявок виникає потреба у чіткій системі, яка дозволить швидко отримувати лідів, визначати їхній пріоритет та ефективно передавати менеджерам.\n\nНаявність такої системи дозволяє значно прискорити обробку заявок, підвищити конверсію в продажі та зробити роботу з клієнтами більш організованою. Це не припущення — практика показує, що швидкість відповіді та правильна пріоритизація лідів безпосередньо впливають на рівень продажів.\n\n2. Рішення\n\nОсновна ідея рішення — централізувати всі джерела лідів та автоматизувати їх обробку.\n\nКрок 1. Збір лідів з усіх джерел\nУсі ліди автоматично збираються в одному місці. Джерелами можуть бути:\n\nFacebook Ads\n\nGoogle Ads\n\nформи на сайті\n\nінші рекламні або маркетингові канали\n\nДля цього я створив спеціальний вузол, який об’єднує всі заявки в єдиний потік даних.\n\nКрок 2. Пріоритизація лідів\nКожному лідові присвоюється певний пріоритет. Це дозволяє менеджерам у першу чергу працювати з найбільш перспективними клієнтами, що підвищує ефективність продажів та якість обслуговування.\n\nКрок 3. Збереження даних\nУсі ліди передаються до бази даних для подальшої обробки. Це може бути:\n\nGoogle Sheets\n\nCRM-система\n\nAirtable\n\nПри цьому система враховує можливі збої. Якщо CRM тимчасово недоступна, дані автоматично записуються в Google Sheets. Якщо недоступна і таблиця, система повідомляє адміністратора, який зможе вручну додати ліда після відновлення роботи сервісів.\n\nКрок 4. Розподіл лідів\nПісля збереження даних система автоматично призначає лідів менеджерам. Це може відбуватись через:\n\nавтоматичне призначення в CRM\n\nповідомлення менеджеру в Slack або Telegram\n\nПовідомлення містить пріоритет ліда та всю необхідну інформацію для швидкого контакту з клієнтом.\n\nЯкщо система сповіщень недоступна, створюється запис у Google Sheets із позначкою, що лід не був призначений. Спеціальний механізм перевіряє ці записи та повторно виконує дію (надсилає повідомлення або призначає ліда), щойно сервіс знову стане доступним.\n\n3. Використані технології\n\nУ проєкті були використані такі інструменти:\n\nn8n — платформа автоматизації workflow\n\nWebhook — для прийому лідів з різних джерел\n\nGoogle Sheets — як база даних\n\nTelegram — для миттєвих сповіщень менеджерів\n\nJavaScript — для реалізації логіки пріоритизації та обробки даних\n\n4. Результат\n\nЗапропонована система забезпечує:\n\nструктуровану та стабільну роботу з лідами\n\nмінімізацію людських помилок\n\nшвидшу реакцію на нові заявки\n\nпідвищення ефективності відділу продажів\n\nДодатково можна реалізувати перевірку лідів на дублікати, що допоможе уникнути незручних ситуацій із повторними зверненнями до клієнтів.\n\nУ підсумку система оптимізує рекламний бюджет, оскільки швидша обробка заявок і правильна пріоритизація лідів сприяють зростанню продажів.",
+        "height": 1648,
+        "width": 1040,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1200,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "e74c97aa-9807-4ca4-ab7d-b0cdfc0ab36c",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERROR G Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERROR G Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [],
+        [
+          {
+            "node": "ERROR TELEGRAM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "9af5d06e-975d-4fa6-ab7c-42c990b28de0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9b9d952f7e2fb9e90dccb723d84939c7681e462cc54b78901395caa971672e63"
+  },
+  "id": "z5FhAhtDKlmbC2Gp",
+  "tags": []
+}
