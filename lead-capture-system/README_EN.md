@@ -210,3 +210,12 @@ Future improvements could include:
 - retry logic for failed notifications
 - analytics dashboard
 - advanced lead scoring
+
+---
+
+This workflow is a template version.
+
+Replace the following values:
+
+- YOUR_CHAT_ID
+- YOUR_SPREADSHEET_ID
