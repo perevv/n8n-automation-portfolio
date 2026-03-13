@@ -1,0 +1,224 @@
+{
+  "name": "Daily Report workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://jsonplaceholder.typicode.com/users",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -64,
+        -80
+      ],
+      "id": "4415b4d3-4e29-40ad-94b9-2866527eca16",
+      "name": "список користувачів"
+    },
+    {
+      "parameters": {
+        "url": "https://jsonplaceholder.typicode.com/posts",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -64,
+        112
+      ],
+      "id": "31c5e1d3-14a9-4c5b-a00c-79e050406a06",
+      "name": "список постів"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -304,
+        32
+      ],
+      "id": "b47c9678-75e7-4b60-9817-ea31bbfd699a",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all();\nreturn {\n  totalUsers: data.length\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        -80
+      ],
+      "id": "28395560-e8c0-46d1-87b2-6eabec215b91",
+      "name": "totalUsers"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all();\n\nconst countPosts = data.length;\n\nconst postsUserId = data.filter(item => item.json.userId === 1);\n\nconst countUser1 = postsUserId.length;\n\nreturn {\n  countPosts: countPosts,\n  countUserId1: countUser1\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        112
+      ],
+      "id": "3beefbf1-c408-4b55-befc-2fe18fc55ca9",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        352,
+        16
+      ],
+      "id": "65f1a282-0de7-412e-8c38-83d2f6c7e0bb",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all();\nconst way1 = data[0].json;\nconst way2 = data[1].json;\n\nreturn {\n  totalUsers: way1.totalUsers,\n  countPosts: way2.countPosts,\n  countUserId1: way2.countUserId1,\n  timestamp: new Date().toISOString(),\n  timestampBoss: new Date().toLocaleString('uk-UA',{\n    day: '2-digit',\n    month: '2-digit',\n    year: 'numeric',\n    hour: '2-digit',\n    minute: '2-digit',\n    timeZone: 'Europe/Kyiv'\n  })\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        16
+      ],
+      "id": "c2051d56-60c6-4dd5-a0bd-d389ecf3e14b",
+      "name": "summary"
+    },
+    {
+      "parameters": {
+        "chatId": "CHAT_ID",
+        "text": "=📊 Щоденний звіт\nКористувачів: {{ $json.totalUsers }}\nПостів всього: {{ $json.countPosts }}\nПостів від userId 1: {{ $json.countUserId1 }}\nДата: {{ $json.timestampBoss }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        16
+      ],
+      "id": "91776c47-7a28-46b4-8c0d-be71f4448de5",
+      "name": "Send a text message",
+      "webhookId": "0a8c4e5b-6cab-442a-9bb7-5658e3154540",
+      "credentials": {
+        "telegramApi": {
+          "id": "2xKQlts6dC72sgix",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "список користувачів",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "список постів",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "список користувачів": {
+      "main": [
+        [
+          {
+            "node": "totalUsers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "список постів": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "totalUsers": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "summary": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "31f984f0-2004-47ad-9798-ecf3a78c7ae6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9b9d952f7e2fb9e90dccb723d84939c7681e462cc54b78901395caa971672e63"
+  },
+  "id": "SLt8f8hJSEUVVWHX",
+  "tags": []
+}
