@@ -212,3 +212,12 @@ Email: john@email.com
 - retry-логікою для помилок сповіщень
 - аналітичною панеллю
 - більш складним lead scoring
+
+---
+
+Цей Workflow є зразковою версією.
+
+Замініть такі значення:
+
+- YOUR_CHAT_ID
+- YOUR_SPREADSHEET_ID
