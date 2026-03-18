@@ -1,0 +1,795 @@
+{
+  "name": "airtable-crm-lead-management",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "Airtable-n8n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2c4c0392-1a34-4a7c-b6fa-c584172edeeb",
+      "name": "Webhook",
+      "webhookId": "1b78fea2-29ad-4817-9d8e-68e9118da932"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all();\nconst dataBody = data.flatMap(item => item.json.body.map(itemBody => ({\n  name:itemBody.name,\n  phone: itemBody.phone,\n  email: itemBody.email,\n  source: itemBody.source,\n  message: itemBody.message\n})));\n\nreturn dataBody;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        0
+      ],
+      "id": "bf8c7ef0-0a65-4a45-b764-db80076ffa11",
+      "name": "inputData"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const source = $json.source;\n\nconst priority = source ===\n  \"facebook\" | source === \"instagram\"\n  ?\"Високий\"\n  :source === \"website\"\n    ?\"Середній\"\n      :\"Низький\";\n\nconst timestamp = new Date().toISOString();\nconst timestampTelegram = new Date().toLocaleString('uk-UA',{\n  day: '2-digit',\n  month: '2-digit',\n  year: 'numeric',\n  hour: '2-digit',\n  minute: '2-digit',\n  timeZone: 'Europe/Kyiv'\n})\n\nreturn {\n  priority: priority,\n  timestamp: timestamp\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "73c00425-c036-4342-bed4-f99d532c15b1",
+      "name": "priority"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite-preview",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite-preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $('inputData').item.json.message }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {
+          "systemMessage": "=Ти класифікуєш зверненння клієнтів тільки за такими напрямками:\nЦІНА - якщо є контекст вартості за послуги чи товари компаїї.\nПІДТРИМКА - якщо є контекст, що клієнт потрибує технічної підтримки компанії.\nІНФО - якщо є нонтекст дізнатись інформацію про продукт або компанію.\nІНШЕ -  інші запити\nВідповідай ЛИШЕ в валідному форматі JSON:\nприклад:\n{\n\"category\": \"ЦІНА\"\n}\nБЕЗ ПОЯСНЕНЬ\nБЕЗ ДОДАТКОВИХ СИМВОЛІВ",
+          "maxOutputTokens": 250
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "fcf1f5c9-efcf-42fc-a9c5-7f3609b1f694",
+      "name": "Message a model",
+      "retryOnFail": false,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "AtmijHbTrumfGaSJ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "list",
+          "cachedResultName": "Wellness leads",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('inputData').item.json.name }}",
+            "Email": "={{ $('inputData').item.json.email }}",
+            "Phone": "={{ $('inputData').item.json.phone }}",
+            "Source": "={{ $('inputData').item.json.source }}",
+            "Priority": "={{ $('priority').item.json.priority }}",
+            "Category": "={{ $('geminiParse').item.json.category }}",
+            "Message": "={{ $('inputData').item.json.message }}",
+            "Timestamp": "={{ $('priority').item.json.timestamp }}",
+            "Status": "New"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "facebook",
+                  "value": "facebook"
+                },
+                {
+                  "name": "instagram",
+                  "value": "instagram"
+                },
+                {
+                  "name": "website",
+                  "value": "website"
+                },
+                {
+                  "name": "other",
+                  "value": "other"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Високий",
+                  "value": "Високий"
+                },
+                {
+                  "name": "Середній",
+                  "value": "Середній"
+                },
+                {
+                  "name": "Низький",
+                  "value": "Низький"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "New",
+                  "value": "New"
+                },
+                {
+                  "name": "In Progress",
+                  "value": "In Progress"
+                },
+                {
+                  "name": "Closed",
+                  "value": "Closed"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1008,
+        304
+      ],
+      "id": "7d430fc9-0038-4c8a-9787-59ab805bbd0b",
+      "name": "Create a record1",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "ouG9J8OFuTTcvyOA",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "list",
+          "cachedResultName": "Wellness leads",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('inputData').item.json.name }}",
+            "Email": "={{ $('inputData').item.json.email }}",
+            "Phone": "={{ $('inputData').item.json.phone }}",
+            "Source": "={{ $('inputData').item.json.source }}",
+            "Priority": "={{ $('priority').item.json.priority }}",
+            "Category": "={{ $('geminiParse').item.json.category }}",
+            "Message": "={{ $('inputData').item.json.message }}",
+            "Timestamp": "={{ $('priority').item.json.timestamp }}",
+            "Status": "In Progress",
+            "id": "={{ $json.recordId }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "facebook",
+                  "value": "facebook"
+                },
+                {
+                  "name": "instagram",
+                  "value": "instagram"
+                },
+                {
+                  "name": "website",
+                  "value": "website"
+                },
+                {
+                  "name": "other",
+                  "value": "other"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Високий",
+                  "value": "Високий"
+                },
+                {
+                  "name": "Середній",
+                  "value": "Середній"
+                },
+                {
+                  "name": "Низький",
+                  "value": "Низький"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "New",
+                  "value": "New"
+                },
+                {
+                  "name": "In Progress",
+                  "value": "In Progress"
+                },
+                {
+                  "name": "Closed",
+                  "value": "Closed"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1008,
+        144
+      ],
+      "id": "19a8670e-dc03-43a6-92b0-d1b9516722ad",
+      "name": "Update record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "ouG9J8OFuTTcvyOA",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const gemini = $json.content.parts[0].text;\nconst geminiParse = JSON.parse(gemini);\nreturn {\n  category: geminiParse.category\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        224
+      ],
+      "id": "a783d935-e5ba-46a2-ba78-55958ec0e256",
+      "name": "geminiParse"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "166b583a-74c6-46c4-a0d3-4921b178c820",
+              "leftValue": "={{ $json.recordId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        736,
+        224
+      ],
+      "id": "1160e954-f225-4107-b451-f7fc8fe11b20",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  name: $('inputData').item.json.name,\n  email: $('inputData').item.json.email,\n  phone: $('inputData').item.json.phone,\n  source: $('inputData').item.json.source,\n  message: $('inputData').item.json.message,\n  priority: $('priority').item.json.priority,\n  category: $(\"geminiParse\").item.json.category,\n  timestamp: $(\"priority\").item.json.timestamp\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        224
+      ],
+      "id": "b0ef34ae-cc74-4346-a197-1be0cfa89452",
+      "name": "allData"
+    },
+    {
+      "parameters": {
+        "url": "YOUR_URL",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "=AND({Email} = \"{{ $json.email }}\", {Phone} = {{ $json.phone }})"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        384,
+        224
+      ],
+      "id": "6f9f9196-22ab-4204-8cf7-5fa039071aed",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "rrIZfoD7u1dsHigQ",
+          "name": "Bearer Auth account"
+        },
+        "httpHeaderAuth": {
+          "id": "bg2xcX4ZTgbyAV85",
+          "name": "Airtable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=🔔 UPDATED CUSTOMER INFORMATION\n\nName: {{ $json.fields.Name }}\nEmail: {{ $json.fields.Email }}\nMessage: {{ $json.fields.Message }}\nStatus: {{ $json.fields.Status }}\nPhone: {{ $json.fields.Phone }}\nPriority: {{ $json.fields.Priority }}\nCategory: {{ $json.fields.Category }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1216,
+        144
+      ],
+      "id": "4cf8ae05-142a-4c78-ba6b-793044bc52f0",
+      "name": "updatedCustomer",
+      "webhookId": "a719721c-f3db-44c6-ab9d-524185c79057",
+      "credentials": {
+        "telegramApi": {
+          "id": "2xKQlts6dC72sgix",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=🔔 NEW CUSTOMER\n\nName: {{ $json.fields.Name }}\nEmail: {{ $json.fields.Email }}\nMessage: {{ $json.fields.Message }}\nStatus: {{ $json.fields.Status }}\nPhone: {{ $json.fields.Phone }}\nPriority: {{ $json.fields.Priority }}\nCategory: {{ $json.fields.Category }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1216,
+        304
+      ],
+      "id": "dd175bf9-9372-4ba4-901c-669d2839379c",
+      "name": "newCustomer",
+      "webhookId": "f02a415e-c194-4904-b045-51cb2aabbddc",
+      "credentials": {
+        "telegramApi": {
+          "id": "2xKQlts6dC72sgix",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const records = $json.records;\nreturn {\n  exist: records.length > 0,\n  recordId: records.length > 0 ? records[0].id : null\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        224
+      ],
+      "id": "1a4130ac-6398-4a9e-b34a-2d97c9ec32ed",
+      "name": "recordIDCheck"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "inputData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "inputData": {
+      "main": [
+        [
+          {
+            "node": "priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "priority": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "geminiParse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "geminiParse": {
+      "main": [
+        [
+          {
+            "node": "allData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Update record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a record1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "allData": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "recordIDCheck",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a record1": {
+      "main": [
+        [
+          {
+            "node": "newCustomer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record": {
+      "main": [
+        [
+          {
+            "node": "updatedCustomer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "recordIDCheck": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ffada4d8-cfcf-47ee-940d-4b7de472fe6d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9b9d952f7e2fb9e90dccb723d84939c7681e462cc54b78901395caa971672e63"
+  },
+  "id": "Y25cqil5nNkgPlxN",
+  "tags": []
+}
