@@ -1,0 +1,471 @@
+{
+  "name": "Gmail",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gmail-transactional-email",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -480,
+        -80
+      ],
+      "id": "961a88e1-9079-4a73-a85a-018cbd9fe597",
+      "name": "Webhook",
+      "webhookId": "415b44cc-35b0-4f0a-acee-52264a7497cf"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite-preview",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite-preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.message }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {
+          "systemMessage": "Ти класифікуєш повідомлення клієнта.\n\nКатегорії:\nЦІНА\nПІДТРИМКА\nІНФО\nІНШЕ\n\nПовертай ЛИШЕ валідний json з категорією.\nБЕЗ ПОЯСНЕНЬ.\nБЕЗ ЗАЙВИХ СИМВОЛІВ.\n\nПриклад:\n{\n\"category\": \"ЦІНА\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -144,
+        -80
+      ],
+      "id": "6bf3e669-3395-4c84-8bc3-346550256ce3",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "AtmijHbTrumfGaSJ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "ЦІНА",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "83cb4071-de25-4498-b900-cb41e7ba088f"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ЦІНА"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "efc162f2-3a8e-4c25-92c0-9289a6574fda",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "ПІДТРИМКА",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ПІДТРИМКА"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "5b35face-659f-42a3-b5f3-0c41c0a4c1bb",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "ІНФО",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ІНФО"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "11e92193-6dcc-4e68-a8b3-c1034a41b0f0",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "ІНШЕ",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ІНШЕ"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -432,
+        192
+      ],
+      "id": "b90a3d2c-fc50-490d-870f-8b9fe9e62421",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"uk\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Прайс-лист — Coffee & Code</title>\n  <style>\n    body {\n      font-family: system-ui, -apple-system, sans-serif;\n      max-width: 580px;\n      margin: 40px auto;\n      line-height: 1.5;\n      color: #1a1a1a;\n      background: #fdfdfd;\n    }\n    h1 {\n      text-align: center;\n      color: #c2410c;\n      margin-bottom: 8px;\n      font-size: 1.9rem;\n    }\n    .subtitle {\n      text-align: center;\n      color: #666;\n      margin-bottom: 32px;\n      font-size: 0.95rem;\n    }\n    table {\n      width: 100%;\n      border-collapse: collapse;\n      margin: 0 auto;\n      background: white;\n      box-shadow: 0 2px 12px rgba(0,0,0,0.08);\n      border-radius: 8px;\n      overflow: hidden;\n    }\n    th, td {\n      padding: 14px 16px;\n      text-align: left;\n      border-bottom: 1px solid #eee;\n    }\n    th {\n      background: #f8f8f8;\n      color: #444;\n      font-weight: 600;\n      text-transform: uppercase;\n      font-size: 0.82rem;\n      letter-spacing: 0.4px;\n    }\n    tr:last-child td {\n      border-bottom: none;\n    }\n    .price {\n      font-weight: 700;\n      color: #c2410c;\n      font-size: 1.05rem;\n      white-space: nowrap;\n    }\n    .note {\n      font-size: 0.82rem;\n      color: #666;\n      text-align: center;\n      margin-top: 24px;\n    }\n  </style>\n</head>\n<body>\n\n  <h1>Прайс-лист</h1>\n  <div class=\"subtitle\">Coffee & Code — березень 2026</div>\n\n  <table>\n    <thead>\n      <tr>\n        <th>Послуга / Товар</th>\n        <th>Опис</th>\n        <th>Ціна</th>\n      </tr>\n    </thead>\n    <tbody>\n      <tr>\n        <td>Еспресо</td>\n        <td>30 мл, свіжомелена арабіка</td>\n        <td class=\"price\">68 грн</td>\n      </tr>\n      <tr>\n        <td>Американо</td>\n        <td>180 / 300 мл</td>\n        <td class=\"price\">72 / 94 грн</td>\n      </tr>\n      <tr>\n        <td>Флет Вайт</td>\n        <td>подвійний еспресо + мікро-піна</td>\n        <td class=\"price\">108 грн</td>\n      </tr>\n      <tr>\n        <td>Матча латте</td>\n        <td>класичний / з кокосовим молоком</td>\n        <td class=\"price\">124 / 138 грн</td>\n      </tr>\n      <tr>\n        <td>Круасан класичний</td>\n        <td>вершкове масло 82%</td>\n        <td class=\"price\">68 грн</td>\n      </tr>\n      <tr>\n        <td>Круасан мигдальний</td>\n        <td>з марципаном та мигдальними пластівцями</td>\n        <td class=\"price\">94 грн</td>\n      </tr>\n      <tr>\n        <td>Сирники (2 шт)</td>\n        <td>зі сметаною та малиновим соусом</td>\n        <td class=\"price\">118 грн</td>\n      </tr>\n      <tr>\n        <td>Абонемент «Ранковий»</td>\n        <td>10 еспресо або американо</td>\n        <td class=\"price\">580 грн</td>\n      </tr>\n    </tbody>\n  </table>\n\n  <div class=\"note\">Ціни актуальні на 19.03.2026<br>Діє програма лояльності: кожна 10 кава — безкоштовно</div>\n\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -208,
+        128
+      ],
+      "id": "72b51e4e-8d1e-49f2-9d97-9b49d7622970",
+      "name": "Price"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        352,
+        -80
+      ],
+      "id": "9bcd6583-b74d-4cb5-b9e0-7881573d2600",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        176
+      ],
+      "id": "ac827661-d2ef-4943-8fa3-3f9b8dd3c65e",
+      "name": "Wait",
+      "webhookId": "d57f4e0f-a5a7-460d-87e8-7abaf4a249fc"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const gemini = $json.content.parts[0].text;\nconst parseText = JSON.parse(gemini);\nreturn {\n  category: parseText.category\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        -80
+      ],
+      "id": "64010bad-2c8a-49c0-849d-645c2de9d5a8",
+      "name": "category"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all();\nconst result = data.flatMap(item => item.json.body.map(itemBody => ({\n    name: itemBody.name,\n    phone: itemBody.phone,\n    email: itemBody.email,\n    source: itemBody.source,\n    message: itemBody.message\n})));\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        -80
+      ],
+      "id": "eda1d683-7f1b-40dc-b451-1bc345183c3e",
+      "name": "customer-info"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"uk\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Підтримка — Coffee & Code</title>\n  <style>\n    body {\n      font-family: system-ui, -apple-system, sans-serif;\n      max-width: 580px;\n      margin: 40px auto;\n      line-height: 1.6;\n      color: #1a1a1a;\n      background: #fdfdfd;\n    }\n    h1 {\n      text-align: center;\n      color: #c2410c;\n      margin-bottom: 8px;\n      font-size: 1.9rem;\n    }\n    .subtitle {\n      text-align: center;\n      color: #666;\n      margin-bottom: 32px;\n      font-size: 0.95rem;\n    }\n    .card {\n      background: white;\n      border-radius: 10px;\n      box-shadow: 0 2px 12px rgba(0,0,0,0.08);\n      padding: 24px;\n      margin-bottom: 24px;\n    }\n    .card h2 {\n      margin: 0 0 12px 0;\n      color: #c2410c;\n      font-size: 1.28rem;\n    }\n    .contact-item {\n      margin: 14px 0;\n      font-size: 1.02rem;\n    }\n    .label {\n      color: #555;\n      font-weight: 500;\n      display: inline-block;\n      width: 110px;\n      min-width: 110px;\n    }\n    .value {\n      color: #1a1a1a;\n    }\n    .value a {\n      color: #c2410c;\n      text-decoration: none;\n      font-weight: 600;\n    }\n    .value a:hover {\n      text-decoration: underline;\n    }\n    .hours {\n      font-size: 0.95rem;\n      color: #555;\n      margin-top: 4px;\n    }\n    .social {\n      margin-top: 28px;\n      text-align: center;\n    }\n    .social a {\n      margin: 0 12px;\n      color: #c2410c;\n      font-size: 1.1rem;\n      text-decoration: none;\n    }\n    .note {\n      text-align: center;\n      color: #777;\n      font-size: 0.85rem;\n      margin-top: 32px;\n    }\n  </style>\n</head>\n<body>\n\n  <h1>Підтримка</h1>\n  <div class=\"subtitle\">Coffee & Code — завжди на зв’язку</div>\n\n  <div class=\"card\">\n    <h2>Швидка підтримка</h2>\n    <div class=\"contact-item\">\n      <span class=\"label\">Телефон:</span>\n      <span class=\"value\"><a href=\"tel:+380671234567\">+38 (067) 123-45-67</a></span>\n    </div>\n    <div class=\"contact-item\">\n      <span class=\"label\">Telegram:</span>\n      <span class=\"value\"><a href=\"https://t.me/coffeecode_support\">@coffeecode_support</a></span>\n    </div>\n    <div class=\"contact-item\">\n      <span class=\"label\">Email:</span>\n      <span class=\"value\"><a href=\"mailto:help@coffeecode.ua\">help@coffeecode.ua</a></span>\n    </div>\n    <div class=\"contact-item\">\n      <span class=\"label\">Час роботи:</span>\n      <span class=\"value\">Пн–Нд 8:00 – 22:00</span>\n      <div class=\"hours\">Відповідь у чаті — до 10 хвилин у робочий час</div>\n    </div>\n  </div>\n\n  <div class=\"card\">\n    <h2>Адреси закладів</h2>\n    <div class=\"contact-item\">\n      <span class=\"label\">Київ 1:</span>\n      <span class=\"value\">вул. Велика Житомирська, 22</span>\n    </div>\n    <div class=\"contact-item\">\n      <span class=\"label\">Київ 2:</span>\n      <span class=\"value\">вул. Саксаганського, 99</span>\n    </div>\n    <div class=\"contact-item\">\n      <span class=\"label\">Львів:</span>\n      <span class=\"value\">пл. Ринок, 14</span>\n    </div>\n  </div>\n\n  <div class=\"social\">\n    <a href=\"https://t.me/coffeecode\">Telegram</a> •\n    <a href=\"https://instagram.com/coffeecode\">Instagram</a> •\n    <a href=\"https://facebook.com/coffeecode\">Facebook</a>\n  </div>\n\n  <div class=\"note\">Ми відповідаємо максимально швидко.<br>Дякуємо, що ви з нами! ☕</div>\n\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -208,
+        272
+      ],
+      "id": "d2ea8c2f-0d75-44fb-b043-23d4283b28ce",
+      "name": "Support"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"uk\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Про нас — Coffee & Code</title>\n  <style>\n    body {\n      font-family: system-ui, -apple-system, sans-serif;\n      max-width: 580px;\n      margin: 40px auto;\n      line-height: 1.6;\n      color: #1a1a1a;\n      background: #fdfdfd;\n    }\n    h1 {\n      text-align: center;\n      color: #c2410c;\n      margin-bottom: 8px;\n      font-size: 1.9rem;\n    }\n    .subtitle {\n      text-align: center;\n      color: #666;\n      margin-bottom: 32px;\n      font-size: 0.95rem;\n    }\n    .card {\n      background: white;\n      border-radius: 10px;\n      box-shadow: 0 2px 12px rgba(0,0,0,0.08);\n      padding: 24px;\n      margin-bottom: 24px;\n    }\n    .card h2 {\n      margin: 0 0 14px 0;\n      color: #c2410c;\n      font-size: 1.28rem;\n    }\n    p {\n      margin: 12px 0;\n      color: #333;\n    }\n    .highlight {\n      color: #c2410c;\n      font-weight: 600;\n    }\n    .values {\n      display: flex;\n      flex-wrap: wrap;\n      gap: 16px;\n      margin: 20px 0;\n    }\n    .value-item {\n      flex: 1 1 140px;\n      padding: 12px;\n      background: #fff8f5;\n      border-radius: 8px;\n      text-align: center;\n      font-size: 0.96rem;\n      border: 1px solid #ffe0d0;\n    }\n    .stats {\n      text-align: center;\n      margin: 28px 0;\n      font-size: 0.95rem;\n      color: #555;\n    }\n    .stats strong {\n      color: #c2410c;\n      font-size: 1.4rem;\n      display: block;\n      margin-bottom: 4px;\n    }\n    .note {\n      text-align: center;\n      color: #777;\n      font-size: 0.85rem;\n      margin-top: 32px;\n    }\n  </style>\n</head>\n<body>\n\n  <h1>Про нас</h1>\n  <div class=\"subtitle\">Coffee & Code — кава, люди, код</div>\n\n  <div class=\"card\">\n    <h2>Хто ми</h2>\n    <p>Coffee & Code — це мережа атмосферних кав'ярень, де можна не лише випити чудову каву, а й комфортно попрацювати, зустрітися з командою чи просто перезавантажитися.</p>\n    <p>Заснована в <span class=\"highlight\">2022 році</span> у Києві, ми поєднуємо specialty coffee, зручні робочі місця, стабільний інтернет та атмосферу, в якій хочеться залишатися довше.</p>\n  </div>\n\n  <div class=\"card\">\n    <h2>Наші цінності</h2>\n    <div class=\"values\">\n      <div class=\"value-item\">Якісна кава<br>100% specialty</div>\n      <div class=\"value-item\">Зручність роботи<br>Wi-Fi 500+ Мбіт</div>\n      <div class=\"value-item\">Тепла атмосфера<br>без гучної музики</div>\n      <div class=\"value-item\">Екологічність<br>zero waste підхід</div>\n      <div class=\"value-item\">Відкритість<br>до фідбеку та ідей</div>\n    </div>\n  </div>\n\n  <div class=\"card\">\n    <h2>Цифри на сьогодні</h2>\n    <div class=\"stats\">\n      <strong>7</strong> закладів<br>у 3 містах\n    </div>\n    <div class=\"stats\">\n      <strong>~4200</strong> постійних гостей<br>щомісяця\n    </div>\n    <div class=\"stats\">\n      <strong>180+</strong> тонн<br>зерна з 2019 року\n    </div>\n  </div>\n\n  <div class=\"note\">Ми віримо, що хороша кава та комфортне місце можуть зробити день кращим.<br>Приходьте — будемо раді вас бачити! ☕💻</div>\n\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -208,
+        416
+      ],
+      "id": "256e8bd6-c98f-4065-a91b-76e6461073b8",
+      "name": "AboutUs"
+    },
+    {
+      "parameters": {
+        "sendTo": "=YOUR_EMAIL",
+        "subject": "=Дякуємо за звернення, {{ $('customer-info').item.json.name }}!",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        320
+      ],
+      "id": "eab7c8cb-9d2b-4c51-a0b8-8f283534a956",
+      "name": "Send a message",
+      "webhookId": "c4ab385e-1074-4cc2-bdfa-199d50c99a8f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RY6mC8MuRpdkNOkT",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "html": "<h2>Привіт, {{ $('customer-info').item.json.name }}</h2>\n<p>Дякуємо за ваше звернення. Ми отримали ваше повідомлення:</p>\n<blockquote>{{ $('customer-info').item.json.message }}</blockquote>\n<p>Наш менеджер зв'яжеться з вами найближчим часом.</p>\n<p>З повагою,<br>Команда підтримки</p>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -208,
+        560
+      ],
+      "id": "a5a04c59-a0b5-483f-bf34-50753e3c4249",
+      "name": "Default"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "customer-info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Price",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Support",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AboutUs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Default",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "category": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "customer-info": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AboutUs": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Price": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Support": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "0d2d0409-c3ee-4594-8d13-f393e99cf456",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9b9d952f7e2fb9e90dccb723d84939c7681e462cc54b78901395caa971672e63"
+  },
+  "id": "bB78Ry5jLUdZNiqZ",
+  "tags": []
+}
