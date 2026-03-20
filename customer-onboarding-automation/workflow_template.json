@@ -1,0 +1,1095 @@
+{
+  "name": "customer-onboarding",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "onboarding",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -688,
+        0
+      ],
+      "id": "fb7cb263-9c36-42d2-9215-572b9b5293c6",
+      "name": "Webhook",
+      "webhookId": "d6abf43a-2886-4219-b6f6-04834c9cf17e"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all();\nconst body = data.flatMap(item => item.json.body.map(itemBody => ({\n  name: itemBody.name,\n  phone: itemBody.phone,\n  email: itemBody.email,\n  source: itemBody.source,\n  message: itemBody.message\n})));\n\nreturn body;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        144
+      ],
+      "id": "26251bec-2c82-43b7-a84e-24a84fc5c691",
+      "name": "customer-info"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "list",
+          "cachedResultName": "Wellness leads",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.name }}",
+            "Email": "={{ $json.email }}",
+            "Phone": "={{ $json.phone }}",
+            "Source": "={{ $json.source }}",
+            "Message": "={{ $json.message }}",
+            "Status": "New",
+            "Timestamp": "={{ $json.timestamp }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "facebook",
+                  "value": "facebook"
+                },
+                {
+                  "name": "instagram",
+                  "value": "instagram"
+                },
+                {
+                  "name": "website",
+                  "value": "website"
+                },
+                {
+                  "name": "other",
+                  "value": "other"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Високий",
+                  "value": "Високий"
+                },
+                {
+                  "name": "Середній",
+                  "value": "Середній"
+                },
+                {
+                  "name": "Низький",
+                  "value": "Низький"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "New",
+                  "value": "New"
+                },
+                {
+                  "name": "In Progress",
+                  "value": "In Progress"
+                },
+                {
+                  "name": "Closed",
+                  "value": "Closed"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        352,
+        144
+      ],
+      "id": "9c93ce05-0d71-430d-b5c9-8bb57682185a",
+      "name": "Create a record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "ouG9J8OFuTTcvyOA",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const records = $json.records;\nreturn {\n  exist: records.length > 0,\n  recordId: records.length > 0 ? records[0].id :null\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        -64
+      ],
+      "id": "b453473c-7efe-4391-a449-4ec3f3683732",
+      "name": "existRecords"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1ebc065f-e123-4d01-9a6d-015bec10bdeb",
+              "leftValue": "={{ $json.recordId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        -64
+      ],
+      "id": "bc73ba89-c106-44ae-8fc9-f2c73f3fdf9a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "list",
+          "cachedResultName": "Wellness leads",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.recordId }}",
+            "Name": "={{ $json.name }}",
+            "Email": "={{ $json.email }}",
+            "Phone": "={{ $json.phone }}",
+            "Source": "={{ $json.source }}",
+            "Message": "={{ $json.message }}",
+            "Status": "In Progress",
+            "Timestamp": "={{ $json.timestamp }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "facebook",
+                  "value": "facebook"
+                },
+                {
+                  "name": "instagram",
+                  "value": "instagram"
+                },
+                {
+                  "name": "website",
+                  "value": "website"
+                },
+                {
+                  "name": "other",
+                  "value": "other"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Високий",
+                  "value": "Високий"
+                },
+                {
+                  "name": "Середній",
+                  "value": "Середній"
+                },
+                {
+                  "name": "Низький",
+                  "value": "Низький"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "New",
+                  "value": "New"
+                },
+                {
+                  "name": "In Progress",
+                  "value": "In Progress"
+                },
+                {
+                  "name": "Closed",
+                  "value": "Closed"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        352,
+        -80
+      ],
+      "id": "b6645212-1a6d-4442-9205-e8eccf8d561d",
+      "name": "Update record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "ouG9J8OFuTTcvyOA",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const timestamp = new Date().toISOString();\n\nreturn {\n  name: $('customer-info').item.json.name,\n  phone: $('customer-info').item.json.phone,\n  email: $('customer-info').item.json.email,\n  source: $('customer-info').item.json.source,\n  message: $('customer-info').item.json.message,\n  recordId: $('existRecords').item.json.recordId,\n  timestamp: timestamp\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        -144
+      ],
+      "id": "2ae08aba-cb4c-41da-95a3-b2b66f479160",
+      "name": "existing-customer"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const timestamp = new Date().toISOString();\n\nreturn {\n  name: $('customer-info').item.json.name,\n  phone: $('customer-info').item.json.phone,\n  email: $('customer-info').item.json.email,\n  source: $('customer-info').item.json.source,\n  message: $('customer-info').item.json.message,\n  timestamp: timestamp\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        64
+      ],
+      "id": "59ee4535-4953-420d-a4bc-4ab5387238f9",
+      "name": "new-customer"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"uk\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Ласкаво просимо до Coffee & Code! ☕</title>\n  <style>\n    body {\n      font-family: system-ui, -apple-system, sans-serif;\n      max-width: 580px;\n      margin: 40px auto;\n      line-height: 1.6;\n      color: #1a1a1a;\n      background: #fdfdfd;\n    }\n    h1 {\n      text-align: center;\n      color: #c2410c;\n      margin: 0 0 12px 0;\n      font-size: 2.1rem;\n    }\n    .emoji {\n      font-size: 2.4rem;\n    }\n    .subtitle {\n      text-align: center;\n      color: #666;\n      margin-bottom: 32px;\n      font-size: 1.05rem;\n    }\n    .card {\n      background: white;\n      border-radius: 12px;\n      box-shadow: 0 4px 16px rgba(0,0,0,0.08);\n      padding: 28px;\n      margin-bottom: 24px;\n    }\n    p {\n      margin: 16px 0;\n      color: #333;\n    }\n    .highlight {\n      color: #c2410c;\n      font-weight: 600;\n    }\n    .btn {\n      display: inline-block;\n      background: #c2410c;\n      color: white;\n      padding: 12px 24px;\n      border-radius: 8px;\n      text-decoration: none;\n      font-weight: 600;\n      margin: 20px 0;\n    }\n    .btn:hover {\n      background: #a33a0a;\n    }\n    .list {\n      margin: 20px 0;\n      padding-left: 20px;\n    }\n    .note {\n      text-align: center;\n      color: #777;\n      font-size: 0.9rem;\n      margin-top: 32px;\n    }\n  </style>\n</head>\n<body>\n\n  <h1>Ласкаво просимо! <span class=\"emoji\">☕💻</span></h1>\n  <div class=\"subtitle\">Вітаємо тебе в Coffee & Code</div>\n\n  <div class=\"card\">\n    <p>Привіт, <span class=\"highlight\">{{ $('new-customer').item.json.name }}</span>!</p>\n    \n    <p>Дякуємо, що обрав(ла) нас. Ми дуже раді, що ти з нами — сподіваємося, наша кава та атмосфера зроблять твої дні трохи смачнішими та продуктивнішими.</p>\n\n    <p>Ось що чекає на тебе вже зараз:</p>\n    <ul class=\"list\">\n      <li>Безлімітний Wi-Fi 500+ Мбіт у кожному закладі</li>\n      <li>Розетки біля кожного зручного місця</li>\n      <li>Програма лояльності: 10-а кава — <strong>безкоштовно</strong></li>\n      <li>Можливість забронювати стіл заздалегідь у Telegram</li>\n    </ul>\n\n    <p style=\"text-align: center;\">\n      <a href=\"https://t.me/coffeecode\" class=\"btn\">Приєднатися до нашого Telegram →</a>\n    </p>\n\n    <p>Якщо будуть питання — пиши нам будь-коли. Ми на зв’язку щодня з 8:00 до 22:00.</p>\n  </div>\n\n  <div class=\"note\">З любов’ю до кави та людей,<br>Coffee & Code Team</div>\n\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        512,
+        64
+      ],
+      "id": "1ee699cb-017a-4348-a6c2-c5fa6f168912",
+      "name": "onboarding"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"uk\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Ми отримали ваше звернення — Coffee & Code</title>\n  <style>\n    body {\n      font-family: system-ui, -apple-system, sans-serif;\n      max-width: 580px;\n      margin: 40px auto;\n      line-height: 1.6;\n      color: #1a1a1a;\n      background: #fdfdfd;\n    }\n    h1 {\n      text-align: center;\n      color: #c2410c;\n      margin: 0 0 12px 0;\n      font-size: 1.9rem;\n    }\n    .subtitle {\n      text-align: center;\n      color: #666;\n      margin-bottom: 28px;\n      font-size: 1rem;\n    }\n    .card {\n      background: white;\n      border-radius: 10px;\n      box-shadow: 0 2px 12px rgba(0,0,0,0.07);\n      padding: 24px;\n      margin-bottom: 24px;\n    }\n    p {\n      margin: 14px 0;\n      color: #333;\n    }\n    .highlight {\n      color: #c2410c;\n      font-weight: 600;\n    }\n    .ticket-id {\n      font-family: monospace;\n      background: #f8f8f8;\n      padding: 2px 8px;\n      border-radius: 4px;\n      color: #c2410c;\n    }\n    .btn {\n      display: inline-block;\n      background: #c2410c;\n      color: white !important;\n      padding: 10px 22px;\n      border-radius: 8px;\n      text-decoration: none;\n      font-weight: 600;\n      margin: 16px 0;\n    }\n    .btn:hover {\n      background: #a33a0a;\n    }\n    .footer {\n      text-align: center;\n      color: #777;\n      font-size: 0.88rem;\n      margin-top: 32px;\n      line-height: 1.4;\n    }\n  </style>\n</head>\n<body>\n\n  <h1>Дякуємо за звернення!</h1>\n  <div class=\"subtitle\">Ми вже взяли ваш запит в роботу</div>\n\n  <div class=\"card\">\n    <p>Привіт!</p>\n    \n    <p>Ваше звернення успішно зареєстровано. Звернення: <strong class=\"ticket-id\">{{ $('existing-customer').item.json.message }}</strong></p>\n    \n    <p>Ми намагаємося відповідати якомога швидше — зазвичай протягом <span class=\"highlight\">1–4 годин</span> у робочий час (8:00–22:00 щодня).</p>\n\n    <p>Якщо питання не терпить зволікань, можете написати нам у Telegram — там часто виходить відповісти ще швидше:</p>\n    \n    <p style=\"text-align: center;\">\n      <a href=\"https://t.me/coffeecode_support\" class=\"btn\">Написати в Telegram →</a>\n    </p>\n\n    <p>Дякуємо, що повідомили нам — це допомагає нам ставати кращими.</p>\n  </div>\n\n  <div class=\"footer\">\n    З повагою та кавою,<br>\n    Команда підтримки Coffee & Code<br>\n    help@coffeecode.ua • @coffeecode_support\n  </div>\n\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        512,
+        -144
+      ],
+      "id": "76c85e35-b8e0-4d14-b6a3-68eb309315ad",
+      "name": "respond"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL OR USE EXPRESSION",
+        "subject": "=Hello, {{ $('existing-customer').item.json.name }}!",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        -144
+      ],
+      "id": "1a7a4e4c-9c29-4439-8875-38b3625de4f9",
+      "name": "respond-g",
+      "webhookId": "5f29a361-5475-4735-8d73-6385abc35522",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RY6mC8MuRpdkNOkT",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL OR USE EXPRESSION",
+        "subject": "=Hello, {{ $('new-customer').item.json.name }}!",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        64
+      ],
+      "id": "07a73edc-33dd-4abb-bda2-72b9c8e4309c",
+      "name": "onboarding-g",
+      "webhookId": "2512bc23-f552-4e1c-9e32-b14821843289",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RY6mC8MuRpdkNOkT",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=🔔 Звернення клієнта\nName: {{ $('existing-customer').item.json.name }}\nEmail: {{ $('existing-customer').item.json.email }}\nMessage: {{ $('existing-customer').item.json.message }}\nPhone: {{ $('existing-customer').item.json.phone }}\n",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        832,
+        -144
+      ],
+      "id": "cc31bd0d-163e-446f-b007-27189ac256a1",
+      "name": "follow-up",
+      "webhookId": "9f9a6c28-e473-45ff-a39e-3ad19f84c8e3",
+      "credentials": {
+        "telegramApi": {
+          "id": "2xKQlts6dC72sgix",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEETS_ID",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "url",
+          "value": "YOUR_SHEETS_ID",
+          "__regex": "https:\\/\\/docs\\.google\\.com\\/spreadsheets\\/d\\/[0-9a-zA-Z\\-_]+.*\\#gid=([0-9]+)"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('customer-info').item.json.name }}",
+            "Email": "={{ $('customer-info').item.json.email }}",
+            "Phone": "={{ $('customer-info').item.json.phone }}",
+            "Source": "={{ $('customer-info').item.json.source }}",
+            "Message": "={{ $('customer-info').item.json.message }}",
+            "ErrorType": "API-Airtable",
+            "Timestamp": "={{ $json.timestamp }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ErrorType",
+              "displayName": "ErrorType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        16,
+        448
+      ],
+      "id": "0d50f36a-ba88-4bcf-839e-b87b1b784c19",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "geRwTXXyIy0u97Qi",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const timestamp = new Date().toISOString();\nreturn {\n  timestamp: timestamp\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        448
+      ],
+      "id": "a2563ac2-bc5d-4f69-a39f-6b6cabe28ed6",
+      "name": "timestamp"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 480,
+        "width": 1232,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -176,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "2f52bb26-3f89-4ab3-b144-37695a2c55d4",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 336,
+        "width": 1040,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -416,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "5988dfb0-62dc-45e1-8cc7-cd39813637d2",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "url": "YOUR_AIRTABLE_API",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "=AND({Email} = \"{{ $json.email }}\", {Phone} = {{ $json.phone }})"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -384,
+        0
+      ],
+      "id": "0b966453-56ee-477d-b3ab-c2c5516e5ec4",
+      "name": "API-Airtable",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "bg2xcX4ZTgbyAV85",
+          "name": "Airtable"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=‼️ Error-API-Airtable\nname: {{ $('customer-info').item.json.name }}\nemail: {{ $('customer-info').item.json.email }}\nphone: {{ $('customer-info').item.json.phone }}\nsource: {{ $('customer-info').item.json.source }}\nmessage: {{ $('customer-info').item.json.message }}\ntimestamp: {{ $('timestamp').item.json.timestamp }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        448
+      ],
+      "id": "bb2dee90-b3b9-4a7a-8c5a-bb5cd7739c3d",
+      "name": "Error-API-Airtable",
+      "webhookId": "0ea1ba52-7e4b-4ef4-8173-1e8ed6ae5d7a",
+      "credentials": {
+        "telegramApi": {
+          "id": "2xKQlts6dC72sgix",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -320,
+        336
+      ],
+      "id": "231ae562-5950-44eb-9b8e-6043c4469c3a",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 2.5
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        448
+      ],
+      "id": "a95e7103-8b8b-464f-9272-1711859a6916",
+      "name": "Wait",
+      "webhookId": "ecdcc2e5-94d9-4b85-a5a9-a0d7f80ec88b"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 320,
+        "width": 528,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -736,
+        -32
+      ],
+      "typeVersion": 1,
+      "id": "dce4c200-95db-4569-9aaa-617169a45576",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "customer-info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "customer-info": {
+      "main": [
+        [
+          {
+            "node": "API-Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "existRecords": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "existing-customer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "new-customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "existing-customer": {
+      "main": [
+        [
+          {
+            "node": "Update record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "new-customer": {
+      "main": [
+        [
+          {
+            "node": "Create a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a record": {
+      "main": [
+        [
+          {
+            "node": "onboarding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record": {
+      "main": [
+        [
+          {
+            "node": "respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "respond": {
+      "main": [
+        [
+          {
+            "node": "respond-g",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "onboarding": {
+      "main": [
+        [
+          {
+            "node": "onboarding-g",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "respond-g": {
+      "main": [
+        [
+          {
+            "node": "follow-up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "timestamp": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Error-API-Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API-Airtable": {
+      "main": [
+        [
+          {
+            "node": "existRecords",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "timestamp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error-API-Airtable": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c5a41103-80a9-4a7c-b958-2d739bc24106",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9b9d952f7e2fb9e90dccb723d84939c7681e462cc54b78901395caa971672e63"
+  },
+  "id": "5RJpAxbuo7uqWJMB",
+  "tags": []
+}
