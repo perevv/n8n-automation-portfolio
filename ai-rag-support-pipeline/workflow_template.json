@@ -1,0 +1,802 @@
+{
+  "name": "RAG system",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rag-supabase",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "aacab27e-a7b7-4697-a63b-8aa5c8a6e2a4",
+      "name": "Webhook",
+      "webhookId": "7b197ae6-48c0-47c5-8d52-bf213a0a7095"
+    },
+    {
+      "parameters": {
+        "jsCode": " const item = $input.first().json;\n\nreturn {\n  knowledge: `Topic: ${item.topic}\\nContent: ${item.content}`\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1824,
+        624
+      ],
+      "id": "ca066d49-b566-48c1-be87-ab40fb276517",
+      "name": "knowledge"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "b92bdd71-4b29-466f-8495-299d0c3bfe16",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nconst data = $input.all();\nconst customerInfo = data.flatMap(item => item.json.body.map(bodyItem => ({\n  chatId: crypto.randomUUID(),\n  name: bodyItem.name,\n  message: bodyItem.message,\n  timestamp: new Date().toISOString()\n})));\nreturn customerInfo;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "d3161682-4ba1-4bfb-bd07-4bed1db5af8b",
+      "name": "customerMessage"
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $json.content?.parts[0]?.text;\nconst text = $json.text;\nconst answer = content || text || 'unknown';\nreturn { answer };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2784,
+        112
+      ],
+      "id": "510f05c4-2cc8-421a-b76b-a888eaa0ebe0",
+      "name": "answer"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite-preview",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite-preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Повідомлення:\n{{ $json.message }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "systemMessage": "=Ти визначаєш тему звернення клієнта.\n\nДоступні теми:\n- ціни\n- доставка\n- повернення\n\nЯкщо не підходить — відповідай \"unknown\"\n\nВідповідь тільки одним словом."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        80
+      ],
+      "id": "c6b66243-5fd3-4f39-99ca-829fbcb711dd",
+      "name": "autoTopic",
+      "retryOnFail": false,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "AtmijHbTrumfGaSJ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Питання:\n{{ $('customerMessage').item.json.message }}\n\nБаза знань:\n{{ $json.knowledge }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "systemMessage": "=Ти асистент підтримки.\n\nВідповідай тільки на основі бази знань.\nЯкщо немає відповіді — напиши \"Передаю на менеджера\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2224,
+        336
+      ],
+      "id": "53e35f39-fe91-4c0b-8dfc-ff59b8002923",
+      "name": "assistantSupport",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "AtmijHbTrumfGaSJ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://YOUR_PROJECT_NAME.supabase.co/rest/v1/YOUR_SHEET_ID?topic=eq.{{$json.topic}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "YOUR_APIKEY"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_APIKEY"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1408,
+        608
+      ],
+      "id": "9afcbfeb-7d92-450e-9b57-bdeb790f2048",
+      "name": "Supabase"
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $json.content?.parts[0]?.text;\nconst text = $json.text;\nconst topic = (content || text || 'unknown').toLowerCase().trim() ;\nreturn {topic};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        320
+      ],
+      "id": "57b008af-bb68-4fc4-b013-b58a6df9192a",
+      "name": "topic"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        944,
+        320
+      ],
+      "id": "1d0829ba-01a3-4f6d-b840-718c89a02781",
+      "name": "Wait",
+      "webhookId": "9095a547-8480-4212-b8f2-8a0ff3e34fff"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2656,
+        384
+      ],
+      "id": "0e865ef2-97ba-456c-b0f5-90bb44eb1495",
+      "name": "Wait1",
+      "webhookId": "68a72316-5fbd-48a8-9403-2b26090114f8"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        416,
+        528
+      ],
+      "id": "2df2b235-53a5-4165-bf03-c6f013772b91",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "Odai4bpjxEmzE5SK",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        2336,
+        688
+      ],
+      "id": "8e087d86-be3f-45d9-85f1-ce0bd86bc8a2",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "Odai4bpjxEmzE5SK",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4fe82026-506c-47aa-b4c9-5e53480ec9c5",
+              "leftValue": "={{$items().length}} ",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1616,
+        448
+      ],
+      "id": "80c82ce4-c041-47d5-9de6-d1c6d5257fc4",
+      "name": "supabaseEmpty"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_URL",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 819685791,
+          "mode": "list",
+          "cachedResultName": "logs-RAG",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEETS_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Id": "={{ $('customerMessage').item.json.chatId }}",
+            "Name": "={{ $('customerMessage').item.json.name }}",
+            "Message": "={{ $('customerMessage').item.json.message }}",
+            "Timestamp": "={{ $('customerMessage').item.json.timestamp }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Id",
+              "displayName": "Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2032,
+        48
+      ],
+      "id": "9adff4d1-7448-4adb-a767-20f79235b890",
+      "name": "logs",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "geRwTXXyIy0u97Qi",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "46a2d3dd-161e-426e-8965-9a1a0f1dd521",
+              "leftValue": "={{ $json.topic }}",
+              "rightValue": "unknown",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1296,
+        320
+      ],
+      "id": "42d7d2d2-da09-4e25-94cc-c26cf5f1d834",
+      "name": "topicUnknown"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('customerMessage').item.json.message }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Ти визначаєш тему звернення клієнта.  Доступні теми: - ціни - доставка - повернення  Якщо не підходить — відповідай \"unknown\"  Відповідь тільки одним словом."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        624,
+        320
+      ],
+      "id": "d77cecd1-7b56-4be0-9ffb-99df9db4fdc5",
+      "name": "fallback_autoTopic"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Питання:\n{{ $('customerMessage').item.json.message }}\n\nБаза знань:\n{{ $('knowledge').item.json.knowledge }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Ти асистент підтримки.  Відповідай тільки на основі бази знань. Якщо немає відповіді — напиши \"Передаю на менеджера\""
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2272,
+        544
+      ],
+      "id": "68a4b826-3f2d-4524-b542-cceb16cb4ff2",
+      "name": "fallback_assistantSupport"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1ee02102-3917-442d-81db-bc45b3068bb2",
+              "leftValue": "={{ $json.answer }}",
+              "rightValue": "менеджер",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "78d0c08e-02f2-49f2-ad0b-d588490765b5",
+              "leftValue": "={{ $json.answer }}",
+              "rightValue": "не знаю",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "66d7f554-5608-4cb4-bfe3-1a2d23ff506d",
+              "leftValue": "={{ $json.answer }}",
+              "rightValue": "unknown",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": "={{ false }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2880,
+        -208
+      ],
+      "id": "ee12cb5f-c483-4124-b145-b1ed2be88898",
+      "name": "answerUnknown"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=Новий тікет!\nID: {{ $('customerMessage').item.json.chatId }}\nКлієнт: {{ $('customerMessage').item.json.name }}\nПовідомлення: {{ $('customerMessage').item.json.message }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1808,
+        48
+      ],
+      "id": "429f5631-3dd3-4bb0-9946-480532187ff4",
+      "name": "newTicket",
+      "webhookId": "b380ef17-7b88-4dc6-9af5-a0c4ca96d97e",
+      "credentials": {
+        "telegramApi": {
+          "id": "2xKQlts6dC72sgix",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "customerMessage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "knowledge": {
+      "main": [
+        [
+          {
+            "node": "assistantSupport",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "autoTopic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "customerMessage": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "answer": {
+      "main": [
+        [
+          {
+            "node": "answerUnknown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "autoTopic": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "fallback_autoTopic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "assistantSupport": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "fallback_assistantSupport",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase": {
+      "main": [
+        [
+          {
+            "node": "supabaseEmpty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "topic": {
+      "main": [
+        [
+          {
+            "node": "topicUnknown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "fallback_autoTopic",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "fallback_assistantSupport",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "supabaseEmpty": {
+      "main": [
+        [
+          {
+            "node": "newTicket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "knowledge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "logs": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "topicUnknown": {
+      "main": [
+        [
+          {
+            "node": "newTicket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fallback_autoTopic": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fallback_assistantSupport": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "answerUnknown": {
+      "main": [
+        [
+          {
+            "node": "newTicket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "newTicket": {
+      "main": [
+        [
+          {
+            "node": "logs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "997fb528-7283-4f7f-81b2-a61bab2fe957",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9b9d952f7e2fb9e90dccb723d84939c7681e462cc54b78901395caa971672e63"
+  },
+  "id": "IZrpZEdNkEW0Crwl",
+  "tags": []
+}
