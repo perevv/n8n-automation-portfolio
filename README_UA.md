@@ -6,7 +6,7 @@
 ![CRM](https://img.shields.io/badge/CRM-Airtable-yellow)
 ![Sentiment](https://img.shields.io/badge/AI-Sentiment%20Analysis-green)
 
- 🇺🇦 Українська | 🇺🇸 [English](README_EN.md)
+ 🇺🇦 Українська | 🇺🇸 [English](README.md)
  
 # 🚀 Automation & AI Portfolio (n8n / Make)
 
